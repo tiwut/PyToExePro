@@ -71,8 +71,7 @@ Here you specify *how* your .exe file should be created.
 2. **Progress & Log:**
 * **Progress Bar:** Shows you roughly what stage the build process is currently at.
 
-
-``` * **Log Window:** Here you can see the **live output** from PyInstaller. This is extremely useful for tracking progress in detail and for viewing error messages in case something goes wrong.
+* **Log Window:** Here you can see the **live output** from PyInstaller. This is extremely useful for tracking progress in detail and for viewing error messages in case something goes wrong.
 
 3. **Open Output Folder:** Once the process has completed successfully, this button becomes active. Clicking it opens the `dist` folder containing your finished `.exe` file. This folder will be created in the same directory as your original Python script.
 
