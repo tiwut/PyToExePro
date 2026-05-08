@@ -7,9 +7,8 @@ import sys
 import webbrowser
 import os
 
-# --- Constants ---
 APP_NAME = "Py-to-EXE-Pro"
-APP_VERSION = "1.1" # Version updated
+APP_VERSION = "1.1"
 WINDOW_SIZE = "700x780"
 PYINSTALLER_CHECK_STAGES = {
     "Building": 10,
@@ -23,45 +22,30 @@ PYINSTALLER_CHECK_STAGES = {
 class PyToExeApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-
-        # --- Window Setup ---
         self.title(f"{APP_NAME} v{APP_VERSION}")
         self.geometry(WINDOW_SIZE)
         self.resizable(False, False)
         ctk.set_appearance_mode("System")
         ctk.set_default_color_theme("blue")
-
-        # --- Class Variables ---
         self.script_path = ctk.StringVar()
         self.icon_path = ctk.StringVar()
         self.output_type = ctk.StringVar(value="onefile")
         self.console_type = ctk.StringVar(value="windowed")
         self.output_dir = ""
-
-        # --- Main Frame ---
         self.main_frame = ctk.CTkFrame(self, corner_radius=10)
         self.main_frame.pack(padx=10, pady=10, fill="both", expand=True)
-
         self.create_widgets()
-        # Run the check in a thread to keep UI responsive
         threading.Thread(target=self.check_system_startup, daemon=True).start()
 
     def create_widgets(self):
-        # ... (The UI creation is the same as before, so I'll shorten it for brevity)
-        # --- Title ---
         title_label = ctk.CTkLabel(self.main_frame, text=APP_NAME, font=ctk.CTkFont(size=24, weight="bold"))
         title_label.pack(pady=(10, 20))
-
-        # --- 1. Dependencies Section ---
         dep_frame = ctk.CTkFrame(self.main_frame)
         dep_frame.pack(fill="x", padx=20, pady=10)
-
         self.dep_button = ctk.CTkButton(dep_frame, text="Check Dependencies", command=self.show_install_instructions)
         self.dep_button.pack(side="left", padx=10, pady=10)
         self.dep_status_label = ctk.CTkLabel(dep_frame, text="Checking system...", text_color="orange")
         self.dep_status_label.pack(side="left", padx=10, pady=10)
-
-        # --- 2. Script Selection Section ---
         script_frame = ctk.CTkFrame(self.main_frame)
         script_frame.pack(fill="x", padx=20, pady=10)
         script_label = ctk.CTkLabel(script_frame, text="Python Script (.py):")
@@ -70,8 +54,6 @@ class PyToExeApp(ctk.CTk):
         script_entry.pack(side="left", padx=10, pady=10, expand=True, fill="x")
         script_button = ctk.CTkButton(script_frame, text="Browse...", command=self.select_script)
         script_button.pack(side="left", padx=10, pady=10)
-
-        # --- 3. Options Section ---
         options_frame = ctk.CTkFrame(self.main_frame)
         options_frame.pack(fill="x", padx=20, pady=10)
         output_type_label = ctk.CTkLabel(options_frame, text="Output Type:")
@@ -86,8 +68,6 @@ class PyToExeApp(ctk.CTk):
         windowed_radio.grid(row=1, column=1, padx=10, pady=5, sticky="w")
         console_radio = ctk.CTkRadioButton(options_frame, text="Show Console Window", variable=self.console_type, value="console")
         console_radio.grid(row=1, column=2, padx=10, pady=5, sticky="w")
-        
-        # Icon
         icon_frame = ctk.CTkFrame(self.main_frame)
         icon_frame.pack(fill="x", padx=20, pady=10)
         icon_label = ctk.CTkLabel(icon_frame, text="Icon File (.ico):")
@@ -98,16 +78,12 @@ class PyToExeApp(ctk.CTk):
         icon_browse_button.pack(side="left", padx=10, pady=10)
         icon_clear_button = ctk.CTkButton(icon_frame, text="Clear", width=50, command=lambda: self.icon_path.set(""))
         icon_clear_button.pack(side="left", padx=10, pady=10)
-
-        # --- 4. Build Section ---
         build_frame = ctk.CTkFrame(self.main_frame)
         build_frame.pack(fill="x", padx=20, pady=10)
         self.build_button = ctk.CTkButton(build_frame, text="BUILD .EXE", font=ctk.CTkFont(size=14, weight="bold"), state="disabled", command=self.build_thread)
         self.build_button.pack(side="left", padx=10, pady=10, ipady=5)
         self.open_folder_button = ctk.CTkButton(build_frame, text="Open Output Folder", state="disabled", command=self.open_output_folder)
         self.open_folder_button.pack(side="right", padx=10, pady=10)
-        
-        # --- 5. Progress & Log Section ---
         log_frame = ctk.CTkFrame(self.main_frame)
         log_frame.pack(fill="both", expand=True, padx=20, pady=10)
         self.progress_bar = ctk.CTkProgressBar(log_frame, orientation="horizontal")
@@ -144,15 +120,12 @@ class PyToExeApp(ctk.CTk):
         else:
             self.log("ERROR: Output directory not found or not set.")
 
-    # --- MAJOR CORRECTION HERE ---
     def check_system_startup(self):
         """Checks for PyInstaller in the system PATH."""
         self.log("--- System Check ---")
         self.log("Checking for PyInstaller...")
         
         try:
-            # We try to run pyinstaller directly. This works if it's in the PATH.
-            # CREATE_NO_WINDOW prevents a console flash.
             subprocess.run(['pyinstaller', '--version'], capture_output=True, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
             self.log("SUCCESS: PyInstaller found in system PATH.")
             self.dep_status_label.configure(text="Ready to build!", text_color="green")
@@ -204,7 +177,6 @@ class PyToExeApp(ctk.CTk):
         self.log(f"Running command: {' '.join(command)}")
         
         try:
-            # CREATE_NO_WINDOW is crucial here for a clean GUI experience
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
             while True:
                 output = process.stdout.readline()
@@ -230,13 +202,6 @@ class PyToExeApp(ctk.CTk):
         finally:
             self.build_button.configure(state="normal", text="BUILD .EXE")
 
-
-# --- ESSENTIAL GUARD FOR PACKAGED APPS ---
 if __name__ == "__main__":
-    # On Windows, multiprocessing/subprocesses can cause issues.
-    # This check is not strictly needed with the new code but is best practice.
-    # from multiprocessing import freeze_support
-    # freeze_support() 
-
     app = PyToExeApp()
     app.mainloop()
